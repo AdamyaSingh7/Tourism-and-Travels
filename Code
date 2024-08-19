@@ -1,0 +1,806 @@
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <vector>// For system("cls")
+#include <iomanip>
+#include<bits/stdc++.h>
+#include <conio.h>
+using namespace std;
+
+void customerMenu();
+void employeeMenu1();
+void mainMenu();
+void employeeMenu();
+void addCityData();
+void updateCustomerData();
+void line(int length);
+
+// Node structure to represent a user
+struct User
+{
+    string username;
+    string password;
+    User* next;
+
+    User(const string& u, const string& p) : username(u), password(p), next(nullptr) {}
+};
+
+// Class to manage the linked list of users
+class UserList
+{
+private:
+    User* head;
+
+public:
+    UserList() : head(nullptr) {}
+
+    // Function to add a new user to the linked list
+    void addUser(const string& username, const string& password)
+    {
+        User* newUser = new User(username, password);
+        newUser->next = head;
+        head = newUser;
+    }
+
+    // Function to check credentials
+    bool checkCredentials(const string& username, const string& password)
+    {
+        User* current = head;
+        while (current != nullptr)
+        {
+            if (current->username == username && current->password == password)
+            {
+                return true; // Credentials match
+            }
+            current = current->next;
+        }
+        return false; // No match found
+    }
+};
+
+class Attraction
+{
+public:
+    string name;
+    int distanceFromCommonPoint;
+    string description; // Added description
+
+    Attraction(const string& n, int dist, const string& desc)
+        : name(n), distanceFromCommonPoint(dist), description(desc) {}
+};
+
+class Hotel
+{
+public:
+    string name;
+    string address;
+    double roomPricePerNight;
+    int starRating;
+    double distance;
+
+    Hotel(const string& n, const string& addr, double price, int rating, double dist)
+        : name(n), address(addr), roomPricePerNight(price), starRating(rating), distance(dist) {}
+};
+
+class City
+{
+public:
+    string name;
+    int userDefinedValue;
+    vector<pair<City*,int>> connections;
+    vector<Attraction> attractions;
+    vector<Hotel> hotels;
+    string description; // Added description
+
+    City(const string& n, int value, const string& desc)
+        : name(n), userDefinedValue(value), description(desc) {}
+
+    void addConnection(City* city, int distance1)
+    {
+        connections.push_back(make_pair(city,distance1));
+        city->connections.push_back(make_pair(this,distance1));
+        //distance=distance1;
+    }
+
+    void addAttraction(const string& name, int distance, const string& description)
+    {
+        attractions.emplace_back(name, distance, description);
+    }
+
+    void addHotel(const Hotel& hotel)
+    {
+        hotels.push_back(hotel);
+    }
+
+    void displayAttractions()
+    {
+        line(50);
+        cout << "Attractions in " << name << ":" << endl;
+        line(50);
+        for (const Attraction& attraction : attractions)
+        {
+            cout << "Name: " << attraction.name << endl;
+            cout << "Description: " << attraction.description << endl;
+            cout << "Distance from Airport : " << attraction.distanceFromCommonPoint << " units" << endl;
+            line(50);
+            cout << endl<< endl;
+        }
+    }
+
+    void displayHotels()
+    {
+        line(50);
+        cout << "Hotels in " << name << ":" << endl;
+        line(50);
+        for (const Hotel& hotel : hotels)
+        {
+            cout << "Hotel Name: " << hotel.name << endl;
+            cout << "Address: " << hotel.address << endl;
+            cout << "Room Price per Night: $" << hotel.roomPricePerNight << endl;
+            cout << "Star Rating: " << hotel.starRating << " stars" << endl;
+            cout << "Distance from Airport : " << hotel.distance << " miles" << endl;
+            line(50);
+            cout<<endl<<endl;
+        }
+    }
+};
+
+class CityGraph
+{
+public:
+    vector<City> cities;
+    string description;
+
+
+    bool isValidCityIndex(int cityIndex)
+    {
+        return cityIndex >= 0 && cityIndex < cities.size();
+    }
+
+    int getCityIndex(const string& cityName)
+    {
+        for (int i = 0; i < cities.size(); ++i)
+        {
+            if (cities[i].name == cityName)
+            {
+                return i;
+            }
+        }
+        return -1; // City not found
+    }
+
+    void addCity(const string& cityName, int userDefinedValue, const string& description)
+    {
+        cities.emplace_back(cityName, userDefinedValue, description);
+    }
+
+    void addConnection(const string& city1Name, const string& city2Name, int distance)
+    {
+        int city1Index = getCityIndex(city1Name);
+        int city2Index = getCityIndex(city2Name);
+
+        if (isValidCityIndex(city1Index) && isValidCityIndex(city2Index))
+        {
+            City* city1 = &cities[city1Index];
+            City* city2 = &cities[city2Index];
+            city1->addConnection(city2, distance);
+            cout << "Connection added between " << city1->name << " and " << city2->name
+                 << " with a distance of " << distance << " units." << endl;
+        }
+        else
+        {
+            cout << "Invalid city names." << endl;
+        }
+    }
+
+    void addAttractionToCity(int cityIndex, const string& attractionName, const string& attractionDescription, int distanceFromCommonPoint)
+    {
+        if (isValidCityIndex(cityIndex))
+        {
+            cities[cityIndex].addAttraction(attractionName,  distanceFromCommonPoint,attractionDescription);
+        }
+        else
+        {
+            cout << "Invalid city index." << endl;
+        }
+    }
+
+    void addHotelToCity(int cityIndex, const Hotel& hotel)
+    {
+        if (isValidCityIndex(cityIndex))
+        {
+            cities[cityIndex].addHotel(hotel);
+        }
+        else
+        {
+            cout << "Invalid city index." << endl;
+        }
+    }
+
+    void displayAttractionsInCity(int cityIndex)
+    {
+        if (isValidCityIndex(cityIndex))
+        {
+            cities[cityIndex].displayAttractions();
+        }
+        else
+        {
+            cout << "Invalid city index." << endl;
+        }
+    }
+
+    void displayHotelsInCity(int cityIndex)
+    {
+        if (isValidCityIndex(cityIndex))
+        {
+            cities[cityIndex].displayHotels();
+        }
+        else
+        {
+            cout << "Invalid city index." << endl;
+        }
+    }
+};
+
+UserList userList;
+CityGraph cityGraph;
+
+// Function to draw a line for better separati
+void line(int length)
+{
+    for (int i = 0; i < length; ++i)
+    {
+        cout << "-";
+    }
+    cout << endl;
+}
+
+void viewCityInformationByName()
+{
+    system("cls");
+    string cityName;
+    line(50);
+    cout << "Enter the name of the city to view information: ";
+    cin.ignore();
+    getline(cin,cityName);
+    line(50);
+
+    // Search for the city by name
+    for (int i = 0; i < cityGraph.cities.size(); ++i)
+    {
+        if (cityGraph.cities[i].name == cityName)
+        {
+            // Display information about the city
+            line(50);
+            cout << "City Name: " << cityGraph.cities[i].name << endl;
+            cout << "User Defined Value: " << cityGraph.cities[i].userDefinedValue << endl;
+            cout << "Description: " << cityGraph.cities[i].description << endl;
+            cout << "Connections to other cities:";
+            for (pair<City*,int> connectedCity : cityGraph.cities[i].connections)
+            {
+                cout << connectedCity.first->name << " ";
+            }
+            cout<<endl;
+            line(50);
+            cout << endl;
+
+            // Display attractions
+            cityGraph.displayAttractionsInCity(i);
+
+            // Display hotels
+            cityGraph.displayHotelsInCity(i);
+
+            getch();
+
+            return;
+        }
+    }
+    cout << "City not found." << endl;
+    line(50);
+    getch();
+}
+
+double calculateTotalPrice(double distance, double fixedPricePerCity, int numberOfPersons)
+{
+    const double pricePerPerson = 20.0; // Adjust this value based on your requirements
+    return distance + fixedPricePerCity + (pricePerPerson * numberOfPersons);
+}
+
+void selectPackage()
+{
+    system("cls");
+    const double fixedPricePerCity = 5000.0; // Adjust this value based on your requirements
+
+    string currentCityName;
+    int currentCityIndex;
+
+    // Ask the user for the current city and validate the input
+    do
+    {
+        line(50);
+        cout << "Enter the name of your current city: ";
+        cin.ignore();
+        getline(cin,currentCityName);
+        line(50);
+        currentCityIndex = cityGraph.getCityIndex(currentCityName);
+
+        if (currentCityIndex == -1)
+        {
+            cout << "Invalid city name. Please try again." << endl;
+        }
+    }
+    while (currentCityIndex == -1);
+
+    // Display information about the current city
+    line(50);
+    cout << "Current City Information:" << endl;
+    cout << "Name: " << cityGraph.cities[currentCityIndex].name << endl;
+    line(50);
+
+    // Display information about other available cities and their attractions and hotels
+    cout << "\nAvailable Cities and Packages:" << endl;
+
+    for (int i = 0; i < cityGraph.cities.size(); ++i)
+    {   int dist;
+        if (i != currentCityIndex)
+        {
+            //double totalPrice = calculateTotalPrice(cityGraph.cities[i].distance, fixedPricePerCity, 1);
+            for(int j=0;j<cityGraph.cities[i].connections.size();j++)
+            {
+                if(cityGraph.cities[i].connections[j].first->name==currentCityName)
+                {
+                    dist=cityGraph.cities[i].connections[j].second;
+                }
+            }
+            line(50);
+            cout << "City: " << cityGraph.cities[i].name
+                 << ", Distance: " << dist<< " units"<< endl;
+
+            cityGraph.displayAttractionsInCity(i);
+            cityGraph.displayHotelsInCity(i);
+            cout << endl<<endl;
+
+        }
+    }
+    cout<<endl<<endl;
+    // Ask the user to select another city
+    string selectedCityName;
+    int selectedCityIndex;
+    // Ask the user for the city to select and validate the input
+    do
+    {
+        line(50);
+        cout << "Enter the name of the city you want to select: ";
+        getline(cin,selectedCityName);
+
+        selectedCityIndex = cityGraph.getCityIndex(selectedCityName);
+
+        if (selectedCityIndex == -1 || selectedCityIndex == currentCityIndex)
+        {
+            cout << "Invalid city name. Please try again." << endl;
+        }
+    }
+    while (selectedCityIndex == -1 || selectedCityIndex == currentCityIndex);
+
+    // Ask for the number of persons
+    int numberOfPersons;
+    cout << "Enter the number of persons: ";
+    cin >> numberOfPersons;
+
+    // Calculate the total price for the selected city package
+    int d;
+    for(int j=0;j<cityGraph.cities[selectedCityIndex].connections.size();j++)
+        {
+            if(cityGraph.cities[selectedCityIndex].connections[j].first->name==currentCityName)
+            {
+                d=cityGraph.cities[selectedCityIndex].connections[j].second;
+            }
+        }
+    double selectedCityPrice = calculateTotalPrice(d, fixedPricePerCity, numberOfPersons);
+
+    // Display the total price for the selected city package
+    cout << "Total Price for the selected city package for " << numberOfPersons << " persons: $"
+         << fixed << setprecision(2) << selectedCityPrice << endl;
+    line(50);
+    getch();
+}
+
+void consumerMenu()
+{
+    int choice;
+
+    while (true)
+    {
+        system("cls");
+        line(50);
+        cout << "Welcome to the Customer Menu!" << endl;
+        line(50);
+        cout << "Please select an option:" << endl;
+        cout << "1. View City Information by City Name" << endl;
+        cout << "2. View City Package And Payment" << endl;
+        cout << "3. Back to Main Menu" << endl;
+        line(50);
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            viewCityInformationByName();
+            break;
+        case 2:
+            selectPackage();
+            break;
+        case 3:
+            cout << "Returning to the Main Menu." << endl;
+            getch();
+            return mainMenu();
+            break;
+        default:
+            cout << "Invalid choice. Please try again." << endl;
+            break;
+        }
+    }
+}
+
+// Function to handle sign-in
+void signIn(UserList& userList)
+{
+    system("cls");
+    string username, password;
+
+    line(50);
+    cout<<"\t\tSIGN-IN"<<endl;
+    line(50);
+    cout << "Enter your desired username: ";
+    cin >> username;
+
+    cout << "Enter your desired password: ";
+    cin >> password;
+
+    userList.addUser(username, password);
+    line(50);
+    cout << "Sign-up successful! Now you can log in." << endl;
+    line(50);
+    getch();
+    customerMenu();
+}
+
+// Function to handle log-in
+void logIn(UserList& userList)
+{
+    system("cls");
+    string username, password;
+
+    line(50);
+    cout<<"\t\tLOG-IN"<<endl;
+    line(50);
+    cout << "Enter your username: ";
+    cin >> username;
+
+    cout << "Enter your password: ";
+    cin >> password;
+
+    if (userList.checkCredentials(username, password))
+    {
+        line(50);
+        cout << "Login successful! Welcome, " << username << "!" << endl;
+        line(50);
+        getch();
+        consumerMenu();
+    }
+    else
+    {
+        cout << "Invalid username or password. Please try again." << endl;
+        line(50);
+        getch();
+    }
+}
+
+void customerMenu()
+{
+    system("cls");
+    int choice;
+
+    line(50);
+    cout << "Welcome to the Customer Menu!" << endl;
+    line(50);
+    cout << "Please select an option:" << endl;
+    cout << "1. Sign In" << endl;
+    cout << "2. Log In" << endl;
+    cout << "3. Back to Main Menu" << endl;
+    line(50);
+    cout << "Enter your choice: ";
+    cin >> choice;
+
+    switch (choice)
+    {
+    case 1:
+        signIn(userList);
+        break;
+    case 2:
+        logIn(userList);
+        break;
+    case 3:
+        cout << "Returning to the Main Menu." << endl;
+        line(50);
+        getch();
+        mainMenu();
+        break;
+    default:
+        cout << "Invalid choice. Please try again." << endl;
+        line(50);
+        customerMenu();
+        break;
+    }
+}
+
+void employeeMenu1()
+{
+    system("cls");
+    string u1, p1;
+
+    line(50);
+    cout << "Welcome to Employee Login!" << endl;
+    line(50);
+    cout << "Enter the username: ";
+    cin >> u1;
+    cout << "Enter the password: ";
+    cin >> p1;
+
+    if (u1 == "admin" && p1 == "admin123")
+    {
+        employeeMenu();
+    }
+    else
+    {
+        cout << "Invalid Credentials" << endl;
+        line(50);
+        getch();
+        mainMenu();
+    }
+}
+
+void addCityData()
+{
+    int option;
+    while (true)
+    {
+        system("cls"); // Clear the console screen
+        line(50);
+        cout << "Options:" << endl;
+        line(50);
+        cout << "1. Add City" << endl;
+        cout << "2. Add Distance Between Cities" << endl;
+        cout << "3. Add Attractions to Cities" << endl;
+        cout << "4. Add Hotels to Cities" << endl;
+        cout << "5. Done Adding Data" << endl;
+        line(50);
+        cout << "Enter your choice: ";
+        cin >> option;
+
+        switch (option)
+        {
+        case 1:
+        {
+            // Add cities to the graph with user-defined values
+            system("cls");
+            line(50);
+            string cityName, cityDescription;
+            cout << "Enter the name of the city: ";
+            cin.ignore();
+            getline(cin, cityName);
+            cout << "\nEnter the description of the city: ";
+             // Clear the newline from the input buffer
+            getline(cin, cityDescription);
+
+            // Increment userDefinedValue globally and automatically
+            int userDefinedValue = cityGraph.cities.size() + 1;
+
+            cityGraph.addCity(cityName, userDefinedValue, cityDescription);
+            line(50);
+            cout << "City " << cityName << " added with User Defined Value: " << userDefinedValue << endl;
+            line(50);
+            getch();
+            break;
+        }
+        case 2:
+        {
+            // Add connections between cities with distances
+            system("cls");
+            string city1, city2;
+            int distance;
+            line(50);
+            cout << "Enter City names and distance :";
+            cin.ignore();
+            getline(cin, city1);
+            if (city1 == " ")
+            {
+                break;
+            }
+            getline(cin, city2);
+            cin>> distance;
+            cout<<endl;
+            cityGraph.addConnection(city1, city2, distance);
+            line(50);
+            getch();
+            break;
+        }
+        case 3:
+        {
+            // Add attractions to cities
+            system("cls");
+            string cityName;
+            line(50);
+            cout << "Enter the city name to add attraction: ";
+            cin.ignore();
+            getline(cin, cityName);
+
+            int cityIndex = -1;
+            for (int i = 0; i < cityGraph.cities.size(); ++i)
+            {
+                if (cityGraph.cities[i].name == cityName)
+                {
+                    cityIndex = i;
+                    break;
+                }
+            }
+
+            if (cityIndex != -1)
+            {
+                string attractionName, attractionDescription;
+                int distance;
+                line(50);
+                cout << "Enter the name of the attraction: ";
+                getline(cin, attractionName);
+                cout << "Enter the description of the attraction: ";
+                // Clear the newline from the input buffer
+                getline(cin, attractionDescription);
+                cout << "Enter the distance from the Airport for " << attractionName << ": ";
+                cin >> distance;
+                line(50);
+
+                cityGraph.addAttractionToCity(cityIndex, attractionName,  attractionDescription,distance);
+                line(50);
+                getch();
+            }
+            else
+            {
+                line(50);
+                cout << "City not found." << endl;
+                line(50);
+                getch();
+            }
+            break;
+        }
+        case 4:
+        {
+            // Add hotels to cities
+            system("cls");
+            string cityName;
+            line(50);
+            cout << "Enter the city name to add hotel: ";
+            cin.ignore();
+            getline(cin, cityName);
+
+            int cityIndex = -1;
+            for (int i = 0; i < cityGraph.cities.size(); ++i)
+            {
+                if (cityGraph.cities[i].name == cityName)
+                {
+                    cityIndex = i;
+                    break;
+                }
+            }
+
+            if (cityIndex != -1)
+            {
+                string hotelName, hotelAddress;
+                double roomPricePerNight;
+                int starRating;
+                double distance;
+                line(50);
+                cout << "Enter the name of the hotel: ";
+                getline(cin, hotelName);
+                cout << "Enter the address of the hotel: ";
+                getline(cin, hotelAddress);
+                cout << "Enter the room price per night: ";
+                cin >> roomPricePerNight;
+                cout << "Enter the star rating of the hotel: ";
+                cin >> starRating;
+                cout << "Enter the distance from the Airport for " << hotelName << ": ";
+                cin >> distance;
+                line(50);
+
+                Hotel hotel(hotelName, hotelAddress, roomPricePerNight, starRating, distance);
+                cityGraph.addHotelToCity(cityIndex, hotel);
+                line(50);
+                getch();
+            }
+            else
+            {
+                line(50);
+                cout << "City not found." << endl;
+                line(50);
+                getch();
+            }
+            break;
+        }
+        case 5:
+            return mainMenu(); // Exit the loop
+        default:
+            cout << "Invalid choice. Please try again." << endl;
+            break;
+        }
+    }
+}
+
+void employeeMenu()
+{
+    system("cls");
+    int choice;
+    line(50);
+    cout << "Welcome to the Employee Menu!" << endl;
+    line(50);
+    cout << "Please select an option:" << endl;
+    cout << "1. Add City Data" << endl;
+    cout << "2. Back to Main Menu" <<endl;
+    line(50);
+    cout << "Enter your choice: ";
+    cin >> choice;
+
+    switch (choice)
+    {
+    case 1:
+        addCityData();
+        break;
+    case 2:
+        cout << "Returning to the Main Menu." << endl;
+        mainMenu();
+        break;
+    default:
+        cout << "Invalid choice. Please try again." << endl;
+        employeeMenu();
+        break;
+    }
+}
+
+void mainMenu()
+{
+    system("cls");
+    int choice;
+
+    line(50);
+    cout << "Welcome to the Main Menu!" << endl;
+    line(50);
+    cout << "Please select an option:" << endl;
+    cout << "1. Customer Menu" << endl;
+    cout << "2. Employee Menu" << endl;
+    cout << "3. Exit" << endl;
+    line(50);
+    cout << "Enter your choice: ";
+    cin >> choice;
+
+    switch (choice)
+    {
+    case 1:
+        customerMenu();
+        break;
+    case 2:
+        employeeMenu1();
+        break;
+    case 3:
+        cout << "Exiting the program. Goodbye!" <<endl;
+        break;
+    default:
+        cout << "Invalid choice. Please try again." << endl;
+        mainMenu();
+        break;
+    }
+}
+
+int main()
+{
+    mainMenu();
+    return 0;
+}
